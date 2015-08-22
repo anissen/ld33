@@ -51,9 +51,11 @@ class PlayScreenState extends State {
 
     var obstacles :Array<NapeBody>;
 
-    var ballsLeft :Int = 3;
+    var ballsLeft :Int = 10;
     var ballsText :Text;
     var ball_col :CircleCollider;
+
+    var ball_start_pos :Vector;
 
     public function new() {
         super({ name: StateId });
@@ -75,6 +77,10 @@ class PlayScreenState extends State {
             align: center
         });
         updateBallsText();
+
+        Luxe.events.listen('won', function(_) {
+            ballsText.text = 'YOU WON!';
+        });
 
         reset_world();
     }
@@ -98,6 +104,8 @@ class PlayScreenState extends State {
         var x = (Luxe.screen.width - w) / 2;
         var y = (Luxe.screen.height - h) / 2;
 
+        ball_start_pos = new Vector(Luxe.screen.mid.x, y + 20);
+
         mouseJoint = new PivotJoint(Luxe.physics.nape.space.world, null, Vec2.weak(), Vec2.weak());
         mouseJoint.space = Luxe.physics.nape.space;
         mouseJoint.active = false;
@@ -117,11 +125,11 @@ class PlayScreenState extends State {
         bottom.cbTypes.add(bottomCollisionType);
         drawer.add(bottom);
 
-        // new Sprite({
-        //     pos: Luxe.screen.mid.clone(),
-        //     size: new Vector(w, h),
-        //     color: new Color(0, 0.5, 0.8, 0.4)
-        // });
+        new Sprite({
+            pos: Luxe.screen.mid.clone(),
+            size: new Vector(w, h),
+            color: new Color(0, 0.5, 0.8, 0.2)
+        });
 
         obstacles = [];
 
@@ -131,18 +139,25 @@ class PlayScreenState extends State {
 
                     var w :Float = object.width;
                     var h :Float = object.height;
-                    if (object.gid == 2) {
+                    if (object.gid == 1) {
+                        w *= 0.75;
+                        h *= 0.75;
+                    } else if (object.gid == 2) {
                         w /= 2;
                         h /= 2;
                     }
+
+                    var rot = luxe.utils.Maths.radians(object.rotation);
 
                     var image_source = ['box.png', 'circle.png']; // horrible hack
                     var obstacle = new Sprite({
                         pos: new Vector(x + 32 + object.pos.x, y - 32 + object.pos.y),
                         size: new Vector(w, h),
-                        rotation_z: object.rotation,
+                        rotation_z: rot,
                         texture: Luxe.resources.texture('assets/' + image_source[object.gid-1])
                     });
+
+                    trace('Rotation: ${rot}');
 
                     var obstacle_col = new BoxCollider({
                         body_type: BodyType.STATIC,
@@ -151,7 +166,7 @@ class PlayScreenState extends State {
                         y: y - 32 + object.pos.y,
                         w: w,
                         h: h,
-                        rotation: object.rotation
+                        rotation: rot
                     });
                     obstacle.add(obstacle_col);
                     obstacle_col.body.cbTypes.add(obstacleCollisionType);
@@ -208,10 +223,12 @@ class PlayScreenState extends State {
     }
 
     function createBall(pos :Vector) {
+        if (ballsLeft <= 0) return;
+
         var ball_size = 16;
         var ball = new Sprite({
             name: 'ball',
-            pos: pos,
+            pos: ball_start_pos.clone(),
             size: new Vector(16, 16),
             texture: Luxe.resources.texture('assets/ball.png')
         });
@@ -227,6 +244,10 @@ class PlayScreenState extends State {
         ball.add(ball_col);
         ball_col.body.cbTypes.add(ballCollisionType);
 
+        var diff = Vector.Subtract(pos, ball_start_pos);
+        var vel = diff.normalized.multiplyScalar(700);
+        ball_col.body.velocity = Vec2.get(vel.x, vel.y);
+
         ballsLeft--;
         updateBallsText();
     }
@@ -237,6 +258,20 @@ class PlayScreenState extends State {
 
     override function onleave<T>(_value :T) {
         trace('LEAVE $StateId');
+    }
+
+    override function update(dt :Float) {
+        if (ball_col == null) {
+            var start = ball_start_pos;
+            var mouse_pos = Luxe.screen.cursor.pos.clone();
+            var diff = Vector.Subtract(mouse_pos, start);
+            var end = Vector.Add(start, Vector.Multiply(diff.normalized, 100));
+            Luxe.draw.line({
+                p0: start,
+                p1: end,
+                immediate: true
+            });
+        }
     }
 
     override function onkeyup(e :KeyEvent) {
