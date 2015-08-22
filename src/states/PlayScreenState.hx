@@ -6,6 +6,7 @@ import luxe.Scene;
 import luxe.Sprite;
 import luxe.States;
 import luxe.Input;
+import luxe.Text;
 import luxe.tween.Actuate;
 import luxe.Vector;
 
@@ -46,8 +47,13 @@ class PlayScreenState extends State {
 
     var ballCollisionType :CbType = new CbType();
     var obstacleCollisionType :CbType = new CbType();
+    var bottomCollisionType :CbType = new CbType();
 
     var obstacles :Array<NapeBody>;
+
+    var ballsLeft :Int = 3;
+    var ballsText :Text;
+    var ball_col :CircleCollider;
 
     public function new() {
         super({ name: StateId });
@@ -64,7 +70,17 @@ class PlayScreenState extends State {
         //Create the tilemap visuals
         // map.display({ scale:map_scale, filter:FilterType.nearest });
 
+        ballsText = new Text({
+            pos: new Vector(Luxe.screen.mid.x, 100),
+            align: center
+        });
+        updateBallsText();
+
         reset_world();
+    }
+
+    function updateBallsText() {
+        ballsText.text = '$ballsLeft balls left';
     }
 
     function reset_world() {
@@ -77,8 +93,10 @@ class PlayScreenState extends State {
         drawer = new DebugDraw();
         Luxe.physics.nape.debugdraw = drawer;
 
-        var w = Luxe.screen.w;
-        var h = Luxe.screen.h;
+        var w = map.total_width;
+        var h = map.total_height;
+        var x = (Luxe.screen.width - w) / 2;
+        var y = (Luxe.screen.height - h) / 2;
 
         mouseJoint = new PivotJoint(Luxe.physics.nape.space.world, null, Vec2.weak(), Vec2.weak());
         mouseJoint.space = Luxe.physics.nape.space;
@@ -86,39 +104,24 @@ class PlayScreenState extends State {
         mouseJoint.stiff = false;
 
         var border = new Body(BodyType.STATIC);
-        border.shapes.add(new Polygon(Polygon.rect(0, 0, w, -1)));
-        border.shapes.add(new Polygon(Polygon.rect(0, h, w, 1)));
-        border.shapes.add(new Polygon(Polygon.rect(0, 0, -1, h)));
-        border.shapes.add(new Polygon(Polygon.rect(w, 0, 1, h)));
+        border.shapes.add(new Polygon(Polygon.rect(x, y, w, -1)));
+        // border.shapes.add(new Polygon(Polygon.rect(y, h, w, 1)));
+        border.shapes.add(new Polygon(Polygon.rect(x, y, -1, h)));
+        border.shapes.add(new Polygon(Polygon.rect(x + w, y, 1, h)));
         border.space = Luxe.physics.nape.space;
-
         drawer.add(border);
 
-        var margin_x = (Luxe.screen.width - map.total_width) / 2 + 32;
-        new Sprite({
-            pos: Luxe.screen.mid.clone(),
-            size: new Vector(map.total_width, map.total_height),
-            color: new Color(0, 0.5, 0.8)
-        });
+        var bottom = new Body(BodyType.STATIC);
+        bottom.shapes.add(new Polygon(Polygon.rect(x, y + h, w, 1)));
+        bottom.space = Luxe.physics.nape.space;
+        bottom.cbTypes.add(bottomCollisionType);
+        drawer.add(bottom);
 
-        var ball_size = 16;
-        var ball = new Sprite({
-            name: 'ball',
-            pos: new Vector(Luxe.screen.mid.x, 50),
-            size: new Vector(16, 16),
-            texture: Luxe.resources.texture('assets/ball.png')
-        });
-        var rubber = Material.rubber();
-        rubber.elasticity = 2;
-        var ball_col = new CircleCollider({
-            body_type:BodyType.DYNAMIC,
-            material: rubber,
-            x: ball.pos.x,
-            y: ball.pos.y,
-            r: ball_size / 2
-        });
-        ball.add(ball_col);
-        ball_col.body.cbTypes.add(ballCollisionType);
+        // new Sprite({
+        //     pos: Luxe.screen.mid.clone(),
+        //     size: new Vector(w, h),
+        //     color: new Color(0, 0.5, 0.8, 0.4)
+        // });
 
         obstacles = [];
 
@@ -135,7 +138,7 @@ class PlayScreenState extends State {
 
                     var image_source = ['box.png', 'circle.png']; // horrible hack
                     var obstacle = new Sprite({
-                        pos: new Vector(margin_x + object.pos.x, object.pos.y),
+                        pos: new Vector(x + 32 + object.pos.x, y - 32 + object.pos.y),
                         size: new Vector(w, h),
                         rotation_z: object.rotation,
                         texture: Luxe.resources.texture('assets/' + image_source[object.gid-1])
@@ -144,8 +147,8 @@ class PlayScreenState extends State {
                     var obstacle_col = new BoxCollider({
                         body_type: BodyType.STATIC,
                         material: Material.steel(),
-                        x: margin_x + object.pos.x,
-                        y: object.pos.y,
+                        x: x + 32 + object.pos.x,
+                        y: y - 32 + object.pos.y,
                         w: w,
                         h: h,
                         rotation: object.rotation
@@ -158,11 +161,14 @@ class PlayScreenState extends State {
             }
         }
 
-        var interactionListener = new InteractionListener(CbEvent.BEGIN, InteractionType.COLLISION, ballCollisionType, obstacleCollisionType, hitBox);
-        Luxe.physics.nape.space.listeners.add(interactionListener);
+        var obstacleInteractionListener = new InteractionListener(CbEvent.BEGIN, InteractionType.COLLISION, ballCollisionType, obstacleCollisionType, hitObstacle);
+        Luxe.physics.nape.space.listeners.add(obstacleInteractionListener);
+
+        var bottominteractionListener = new InteractionListener(CbEvent.BEGIN, InteractionType.COLLISION, ballCollisionType, bottomCollisionType, hitBottom);
+        Luxe.physics.nape.space.listeners.add(bottominteractionListener);
     }
 
-    function hitBox(collision :InteractionCallback) :Void {
+    function hitObstacle(collision :InteractionCallback) :Void {
         // collision.
         // trace('ballToWall');
         var ballBody :nape.phys.Body = collision.int1.castBody;
@@ -194,6 +200,37 @@ class PlayScreenState extends State {
         obstacle.entity.destroy();
     }
 
+    function hitBottom(collision :InteractionCallback) :Void {
+        drawer.remove(ball_col.body);
+        ball_col.body.space = null;
+        ball_col.entity.destroy();
+        ball_col = null;
+    }
+
+    function createBall(pos :Vector) {
+        var ball_size = 16;
+        var ball = new Sprite({
+            name: 'ball',
+            pos: pos,
+            size: new Vector(16, 16),
+            texture: Luxe.resources.texture('assets/ball.png')
+        });
+        var rubber = Material.rubber();
+        rubber.elasticity = 2;
+        ball_col = new CircleCollider({
+            body_type:BodyType.DYNAMIC,
+            material: rubber,
+            x: ball.pos.x,
+            y: ball.pos.y,
+            r: ball_size / 2
+        });
+        ball.add(ball_col);
+        ball_col.body.cbTypes.add(ballCollisionType);
+
+        ballsLeft--;
+        updateBallsText();
+    }
+
     override function onenter<T>(_value :T) {
         trace('ENTER $StateId');
     }
@@ -218,6 +255,10 @@ class PlayScreenState extends State {
 
     override function onmousedown( e:MouseEvent ) {
         var mousePoint = Vec2.get(e.pos.x, e.pos.y);
+
+        if (ball_col == null) {
+            createBall(e.pos);
+        }
 
         for (body in Luxe.physics.nape.space.bodiesUnderPoint(mousePoint)) {
             if (!body.isDynamic()) {
