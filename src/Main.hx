@@ -14,6 +14,7 @@ class Main extends luxe.Game {
         config.preload.textures.push({ id:'assets/circle.png' });
         config.preload.textures.push({ id:'assets/ball.png' });
         config.preload.textures.push({ id:'assets/box.png' });
+        config.preload.textures.push({ id:'assets/monster.png' });
         config.preload.texts.push({ id:'assets/test.tmx' });
         return config;
     }
@@ -24,7 +25,7 @@ class Main extends luxe.Game {
 
         //Tell the camera to keep the world size fixed,
         //And automatically fit the window size
-        // Luxe.camera.size = new Vector(512, 512);
+        Luxe.camera.size = new Vector(768, 512);
         Actuate.defaultEase = luxe.tween.easing.Quad.easeInOut;
 
         states = new States({ name: 'state_machine' });

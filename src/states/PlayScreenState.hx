@@ -73,7 +73,8 @@ class PlayScreenState extends State {
         // map.display({ scale:map_scale, filter:FilterType.nearest });
 
         ballsText = new Text({
-            pos: new Vector(Luxe.screen.mid.x, 100),
+            pos: new Vector(0, 0),
+            bounds: new luxe.Rectangle(0, 0, 200, 200),
             align: center
         });
         updateBallsText();
@@ -101,10 +102,10 @@ class PlayScreenState extends State {
 
         var w = map.total_width;
         var h = map.total_height;
-        var x = (Luxe.screen.width - w) / 2;
-        var y = (Luxe.screen.height - h) / 2;
+        var x = Luxe.camera.size.x - w; //(Luxe.camera.size.x - w) / 2;
+        var y = (Luxe.camera.size.y - h) / 2;
 
-        ball_start_pos = new Vector(Luxe.screen.mid.x, y + 20);
+        ball_start_pos = new Vector(Luxe.camera.size.x / 2, y + 20);
 
         mouseJoint = new PivotJoint(Luxe.physics.nape.space.world, null, Vec2.weak(), Vec2.weak());
         mouseJoint.space = Luxe.physics.nape.space;
@@ -126,7 +127,8 @@ class PlayScreenState extends State {
         drawer.add(bottom);
 
         new Sprite({
-            pos: Luxe.screen.mid.clone(),
+            centered: false,
+            pos: new Vector(x, y),
             size: new Vector(w, h),
             color: new Color(0, 0.5, 0.8, 0.2)
         });
@@ -157,8 +159,6 @@ class PlayScreenState extends State {
                         texture: Luxe.resources.texture('assets/' + image_source[object.gid-1])
                     });
 
-                    trace('Rotation: ${rot}');
-
                     var obstacle_col = new BoxCollider({
                         body_type: BodyType.STATIC,
                         material: Material.steel(),
@@ -181,6 +181,12 @@ class PlayScreenState extends State {
 
         var bottominteractionListener = new InteractionListener(CbEvent.BEGIN, InteractionType.COLLISION, ballCollisionType, bottomCollisionType, hitBottom);
         Luxe.physics.nape.space.listeners.add(bottominteractionListener);
+
+        new Sprite({
+            pos: new Vector(65, Luxe.camera.size.y - 65),
+            size: new Vector(320, 320),
+            texture: Luxe.resources.texture('assets/monster.png')
+        });
     }
 
     function hitObstacle(collision :InteractionCallback) :Void {
@@ -263,7 +269,7 @@ class PlayScreenState extends State {
     override function update(dt :Float) {
         if (ball_col == null) {
             var start = ball_start_pos;
-            var mouse_pos = Luxe.screen.cursor.pos.clone();
+            var mouse_pos = Luxe.camera.screen_point_to_world(Luxe.screen.cursor.pos.clone());
             var diff = Vector.Subtract(mouse_pos, start);
             var end = Vector.Add(start, Vector.Multiply(diff.normalized, 100));
             Luxe.draw.line({
@@ -292,7 +298,7 @@ class PlayScreenState extends State {
         var mousePoint = Vec2.get(e.pos.x, e.pos.y);
 
         if (ball_col == null) {
-            createBall(e.pos);
+            createBall(Luxe.camera.screen_point_to_world(e.pos));
         }
 
         for (body in Luxe.physics.nape.space.bodiesUnderPoint(mousePoint)) {
