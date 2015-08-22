@@ -104,16 +104,17 @@ class PlayScreenState extends State {
         var ball_size = 16;
         var ball = new Sprite({
             name: 'ball',
+            pos: new Vector(Luxe.screen.mid.x, 50),
             size: new Vector(16, 16),
             texture: Luxe.resources.texture('assets/ball.png')
         });
         var rubber = Material.rubber();
-        rubber.elasticity = 8;
+        rubber.elasticity = 2;
         var ball_col = new CircleCollider({
             body_type:BodyType.DYNAMIC,
             material: rubber,
-            x: 100,
-            y: 100,
+            x: ball.pos.x,
+            y: ball.pos.y,
             r: ball_size / 2
         });
         ball.add(ball_col);
@@ -125,22 +126,28 @@ class PlayScreenState extends State {
             for (object in group.objects) {
                 if (group.name == 'boxes') {
 
+                    var w :Float = object.width;
+                    var h :Float = object.height;
+                    if (object.gid == 2) {
+                        w /= 2;
+                        h /= 2;
+                    }
+
                     var image_source = ['box.png', 'circle.png']; // horrible hack
                     var obstacle = new Sprite({
                         pos: new Vector(margin_x + object.pos.x, object.pos.y),
-                        size: new Vector(object.width, object.height),
+                        size: new Vector(w, h),
                         rotation_z: object.rotation,
                         texture: Luxe.resources.texture('assets/' + image_source[object.gid-1])
                     });
-                    trace('Rotation ${object.rotation}');
 
                     var obstacle_col = new BoxCollider({
                         body_type: BodyType.STATIC,
                         material: Material.steel(),
                         x: margin_x + object.pos.x,
                         y: object.pos.y,
-                        w: object.width,
-                        h: object.height,
+                        w: w,
+                        h: h,
                         rotation: object.rotation
                     });
                     obstacle.add(obstacle_col);
