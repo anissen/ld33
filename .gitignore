@@ -1,0 +1,7 @@
+/bin
+
+*.sublime-project
+*.sublime-workspace
+
+*.DS_Store
+*.n

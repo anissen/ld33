@@ -1,0 +1,40 @@
+{
+    flow : {
+        build : {
+            android : {
+                sdk: '/usr/local/Cellar/android-sdk/r21.1/',
+                ant_path: '/usr/local/Cellar/ant/1.9.4/bin/ant'
+            }
+        }
+    },
+
+    project : {
+        name : 'LD33',
+        version : '0.0.1',
+        author : 'Anders Nissen',
+
+        app : {
+            name : 'LD33',
+            package : 'com.andersnissen.ld33',
+            main : 'Main',
+            mobile : {
+                orientation : 'portrait'
+            }
+        },
+
+        build : {
+            dependencies : {
+                luxe : '*',
+                nape : '*'
+            },
+            defines : [
+                'absolute-path'
+            ]
+        },
+
+        files : {
+            config : 'config.json',
+            assets : 'assets/'
+        }
+    }
+}
