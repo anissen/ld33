@@ -55,6 +55,7 @@ class Main extends luxe.Game {
         states = new States({ name: 'state_machine' });
         states.add(new TitleScreenState());
         states.add(new PlayScreenState());
+        states.add(new GameOverScreenState());
 
         switch_to_state(TitleScreenState.StateId);
     }
@@ -69,6 +70,7 @@ class Main extends luxe.Game {
             case Key.key_2: switch_to_state(PlayScreenState.StateId, { mapId: 2, ball_count: 10, par: 5 });
             case Key.key_3: switch_to_state(PlayScreenState.StateId, { mapId: 3, ball_count: 10, par: 5 });
             case Key.key_4: switch_to_state(PlayScreenState.StateId, { mapId: 4, ball_count: 10, par: 5 });
+            case Key.key_7: switch_to_state(PlayScreenState.StateId, { mapId: 7, ball_count: 10, par: 5 });
         }
     }
 }

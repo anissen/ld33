@@ -13,8 +13,8 @@ import luxe.tween.Actuate;
 import luxe.Vector;
 import luxe.Visual;
 
-class TitleScreenState extends State {
-    static public var StateId :String = 'TitleScreenState';
+class GameOverScreenState extends State {
+    static public var StateId :String = 'GameOverScreenState';
 
     var scene :Scene;
     var titleText :Text;
@@ -24,7 +24,7 @@ class TitleScreenState extends State {
 
     public function new() {
         super({ name: StateId });
-        scene = new Scene('TitleScreenScene');
+        scene = new Scene('GameOverScreenScene');
     }
 
     override function init() {
@@ -39,9 +39,9 @@ class TitleScreenState extends State {
         });
 
         titleText = new Text({
-            pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y * 0.7),
-            text: 'Click to start',
-            color: new Color(0, 0, 0.7, 0),
+            pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y * 0.3),
+            text: 'Congratulations!',
+            color: new Color(0, 0.2, 0.9, 0),
             align: TextAlign.center,
             align_vertical: TextAlign.center,
             scene: scene,
@@ -58,15 +58,12 @@ class TitleScreenState extends State {
         });
 
         Actuate
-            .tween(titleText.pos, 0.8, { y: Luxe.camera.size.y * 0.8 })
-            .reflect()
-            .repeat();
-
-        Actuate
             .tween(background.pos, 0.3, { y: Luxe.camera.size.y / 2 })
             .onComplete(function() {
                 Actuate.tween(titleText.color, 0.3, { a: 1 });
             });
+
+        Actuate.tween(monster.pos, 2, { y: Luxe.camera.size.y * 0.7 }).onComplete(outro);
     }
 
     override function onleave<T>(_value :T) {
@@ -77,39 +74,19 @@ class TitleScreenState extends State {
             });
     }
 
-    override function onmousedown(e :MouseEvent) {
-        if (start_clicked) {
-            return;
-        }
-        start_clicked = true;
-
-        titleText.visible = false;
-        monster.visible = true;
-        Actuate.tween(monster.pos, 2, { y: Luxe.camera.size.y * 0.7 }).onComplete(intro);
-    }
-
-    function intro() {
+    function outro() {
         Actuate.tween(monster.pos, 10, { y: monster.pos.y - 20, x: monster.pos.x + 30 });
-        say(['Hello!', 'Welcome to Monster\'s Ball!', 'I\'ll be your guide\nduring your stay.'], 10).then(intro2);
+        say(['Congratulations!', 'You\'ve completed Monster\'s Bal!', '... and with flying colors,\nI must say!'], 10).then(outro2);
     }
 
-    function intro2() {
+    function outro2() {
         Actuate.tween(monster.pos, 10, { y: monster.pos.y + 10, x: monster.pos.x + 30 });
-        say(['Monster\'s Ball is every\nmonster\'s favorite pasttime!', 'We come here to unwind after\na long day of scaring people.'], 10).then(intro3);
+        say(['Now you\'re ready to get\nback out under those beds\nand scare some children.'], 10).then(outro3);
     }
 
-    function intro3() {
+    function outro3() {
         Actuate.tween(monster.pos, 10, { y: monster.pos.y - 10, x: monster.pos.x - 10 });
-        say(['So, what is Monster\'s Ball, you ask?', 'Well, it\'s simple, really.', 'You throw rubber balls and\ntry to hit all the obstacles.'], 10).then(intro4);
-    }
-
-    function intro4() {
-        Actuate.tween(monster.pos, 10, { y: monster.pos.y + 60, x: monster.pos.x - 90 });
-        say(['Easy, right?\nShould we get started?', 'I\'ll be right over\nhere to help you.', 'Here we go!'], 10).then(start);
-    }
-
-    function start() {
-        Main.switch_to_state(PlayScreenState.StateId, { mapId: 1, ball_count: 5, par: 5 });
+        say(['Thanks for playing!'], 10);
     }
 
     function say(texts :Array<String>, duration :Int = 3) {

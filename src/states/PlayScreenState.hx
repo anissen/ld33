@@ -372,6 +372,10 @@ class PlayScreenState extends State {
         });
         
         say([['Good job!'], ['Impressive'], ['I knew you could do it'], ['Piece of cake'], ['Like scaring small children'], ['Like stealing candy\nfrom a child']], 2, 0.7).then(function() {
+            if (mapId == 7) {
+                Main.switch_to_state(GameOverScreenState.StateId);
+                return;
+            }
             Main.switch_to_state(PlayScreenState.StateId, { mapId: mapId + 1, ball_count: 5, par: 5 });
         });
     }
@@ -454,7 +458,7 @@ class PlayScreenState extends State {
     }
 
     override function onleave<T>(_value :T) {
-
+        Luxe.scene.empty();
     }
 
     function say(texts :Array<Array<String>>, duration :Int = 3, probability :Float = 1) {
