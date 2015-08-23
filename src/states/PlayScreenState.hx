@@ -103,14 +103,14 @@ class PlayScreenState extends State {
         reset_world();
 
         ballsText = new Text({
-            pos: new Vector(0, 40),
+            pos: new Vector(0, 50),
             bounds: new luxe.Rectangle(0, 0, 256, 200),
             align: center,
             color: new Color(0.8, 0.4, 0.0)
         });
 
         comboText = new Text({
-            pos: new Vector(0, 100),
+            pos: new Vector(0, 170),
             bounds: new luxe.Rectangle(0, 0, 256, 200),
             align: center,
             color: new Color(0.0, 0.6, 0.8)
@@ -292,12 +292,13 @@ class PlayScreenState extends State {
         obstacles.remove(obstacle);
         quest_obstacles.remove(obstacle);
 
+        ballBody.torque = -1 + 2 * Math.random();
+
         var position = new Vector((ballBody.position.x + obstacleBody.position.x) / 2, (ballBody.position.y + obstacleBody.position.y) / 2);
 
-        Luxe.events.fire('hit', { entity: obstacle.entity, body: obstacle.body, position: position });
         if (obstacles.empty()) {
             won();
-        } else  if (quest_obstacles.empty()) {
+        } else if (quest_obstacles.empty()) {
             won();
         }
         
@@ -331,7 +332,12 @@ class PlayScreenState extends State {
 
         combos++;
         if (combos > maxCombos) maxCombos = combos;
-        if (combos % 10 == 0) {
+        if (combos == 10 || combos == 15 || combos == 20) {
+            entities.Notification.Toast({
+                text: '$combos Combo!\nExtra Ball!',
+                scene: Luxe.scene,
+                pos: new Vector(comboText.pos.x + comboText.geom.text_width, comboText.pos.y)
+            });
             ballsLeft++;
             updateBallsText();
         }
@@ -340,6 +346,11 @@ class PlayScreenState extends State {
 
     function won() {
         game_over = true;
+        entities.Notification.Toast({
+            text: 'Level Won!',
+            scene: Luxe.scene,
+            pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y / 2)
+        });
         Luxe.timer.schedule(2, function() {
             Main.switch_to_state(PlayScreenState.StateId, { mapId: mapId + 1, ball_count: 5, par: 5 });
         });
@@ -349,13 +360,21 @@ class PlayScreenState extends State {
         ball_col.body.space = null;
         ball_col.entity.destroy();
         ball_col = null;
+
+        if (ballsLeft == 0) {
+            entities.Notification.Toast({
+                text: 'Level Lost!',
+                scene: Luxe.scene,
+                pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y / 2)
+            });
+            Luxe.timer.schedule(2, function() {
+                setup_level();
+            });
+        }
     }
 
     function createBall(pos :Vector) {
-        if (game_over) return;
-        if (ballsLeft <= 0) {
-            setup_level();
-        }
+        if (ballsLeft <= 0 || game_over) return;
 
         var ball_size = 16;
         var ball = new Sprite({
