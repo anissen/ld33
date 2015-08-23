@@ -71,6 +71,8 @@ class PlayScreenState extends State {
     var maxCombos :Int;
     var trail_renderer :components.TrailRenderer;
 
+    var monster :Sprite;
+
     var game_over :Bool;
 
     public function new() {
@@ -282,7 +284,7 @@ class PlayScreenState extends State {
         var bottominteractionListener = new InteractionListener(CbEvent.BEGIN, InteractionType.COLLISION, ballCollisionType, bottomCollisionType, hitBottom);
         Luxe.physics.nape.space.listeners.add(bottominteractionListener);
 
-        new Sprite({
+        monster = new Sprite({
             pos: new Vector(65, Luxe.camera.size.y - 65),
             size: new Vector(320, 320),
             texture: Luxe.resources.texture('assets/monster.png')
@@ -348,10 +350,12 @@ class PlayScreenState extends State {
         if (combos > maxCombos) maxCombos = combos;
         if (combos == 10 || combos == 15 || combos == 20) {
             entities.Notification.Toast({
-                text: '$combos Combo!\nExtra Ball!',
+                text: '${combos}x Combo!\nExtra Ball!',
                 scene: Luxe.scene,
-                pos: new Vector(comboText.pos.x + comboText.geom.text_width, comboText.pos.y)
+                pos: new Vector(comboText.pos.x + comboText.geom.text_width, comboText.pos.y),
+                color: new Color(0, 0, 1)
             });
+            say([['C-c-combo!'], ['Nice one'], ['Well done!'], ['Awesome'], ['Bam!'], ['Yay, an extra ball!'], ['Now you\'re working your magic!']], 2, 0.5);
             ballsLeft++;
             updateBallsText();
         }
@@ -363,14 +367,20 @@ class PlayScreenState extends State {
         entities.Notification.Toast({
             text: 'Level Won!',
             scene: Luxe.scene,
-            pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y / 2)
+            pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y / 2),
+            color: new Color(0, 1, 0)
         });
-        Luxe.timer.schedule(2, function() {
+        
+        say([['Good job!'], ['Impressive'], ['I knew you could do it'], ['Piece of cake'], ['Like scaring small children'], ['Like stealing candy\nfrom a child']], 2, 0.7).then(function() {
             Main.switch_to_state(PlayScreenState.StateId, { mapId: mapId + 1, ball_count: 5, par: 5 });
         });
     }
 
     function hitBottom(collision :InteractionCallback) :Void {
+        ball_lost();
+    }
+
+    function ball_lost() {
         ball_col.body.space = null;
         ball_col.entity.destroy();
         ball_col = null;
@@ -379,11 +389,14 @@ class PlayScreenState extends State {
             entities.Notification.Toast({
                 text: 'Level Lost!',
                 scene: Luxe.scene,
-                pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y / 2)
+                pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y / 2),
+                color: new Color(1, 0, 0)
             });
-            Luxe.timer.schedule(2, function() {
-                setup_level();
-            });
+            say([['Too bad'], ['Better luck next time'], ['Don\'t worry,\nit was a hard one', '... for a n00b!'], ['Give it another try'], ['Yeah, it\'s a hard one']], 3, 0.7).then(setup_level);
+        } else {
+            if (combos == 0) {
+                say([['Did I not explain the\ngoal of this game?'], ['That was very bad.'], ['Maybe this game is not for you.'], ['Pff!', 'Sorry, but that was hilarious'], ['That was bad and\nyou should feel bad.'], ['First rule of\nMonster\'s Ball:', 'Hit the obstacles'], ['Pratice makes perfect.', 'A LOT of pratice.']], 3, 0.8);
+            }
         }
     }
 
@@ -436,10 +449,29 @@ class PlayScreenState extends State {
         ball_count = options.ball_count;
         par = options.par;
         setup_level();
+
+        say([['Good luck'], ['Have fun'], ['Enjoy!'], ['You\'ll do great!']], 2, 0.7);
     }
 
     override function onleave<T>(_value :T) {
 
+    }
+
+    function say(texts :Array<Array<String>>, duration :Int = 3, probability :Float = 1) {
+        if (Math.random() > probability) {
+            return new snow.api.Promise(function(resolve, reject) {
+                resolve();
+            });
+        }
+
+        var speechBubble = new entities.SpeechBubble({
+            scene: Luxe.scene,
+            depth: 10,
+            texts: texts[Math.floor(texts.length * Math.random())],
+            duration: duration
+        });
+        monster.add(speechBubble);
+        return speechBubble.get_promise();
     }
 
     override function update(dt :Float) {
@@ -466,9 +498,7 @@ class PlayScreenState extends State {
         var mousePoint = Vec2.get(e.pos.x, e.pos.y);
 
         if (ball_col != null) {
-            ball_col.body.space = null;
-            ball_col.entity.destroy();
-            ball_col = null;
+            ball_lost();
         }
         createBall(Luxe.camera.screen_point_to_world(e.pos));
     }

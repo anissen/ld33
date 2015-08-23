@@ -1,5 +1,5 @@
 
-package game.entities;
+package entities;
 
 import luxe.Component;
 import luxe.Entity;
@@ -35,7 +35,7 @@ class SpeechBubble extends Component {
 
         speech_bubble = new NineSlice({
             name_unique: true,
-            texture: Luxe.resources.texture('assets/images/speech_bubble.png'),
+            texture: Luxe.resources.texture('assets/speech_bubble.png'),
             top: 10,
             left: 10,
             right: 10,
@@ -129,7 +129,7 @@ class SpeechBubble extends Component {
     }
 
     function get_corrected_pos(v :Vector) :Vector {
-        return Vector.Add(v, new Vector(20, -90));
+        return Vector.Add(v, new Vector(50, -110));
     }
 
     function sizechange() {

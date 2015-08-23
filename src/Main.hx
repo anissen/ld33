@@ -21,6 +21,7 @@ class Main extends luxe.Game {
         config.preload.textures.push({ id:'assets/particle.png' });
         config.preload.textures.push({ id:'assets/cloud.png' });
         config.preload.textures.push({ id:'assets/bouncer.png' });
+        config.preload.textures.push({ id:'assets/speech_bubble.png' });
 
         config.preload.texts.push({ id:'assets/fireflies.json' });
         config.preload.texts.push({ id:'assets/level1.tmx' });
