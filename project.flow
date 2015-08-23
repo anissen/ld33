@@ -8,6 +8,15 @@
         }
     },
 
+    luxe:{
+        window: {
+            width: 1152,
+            height: 768,
+            title: 'Monsters Ball',
+            fullscreen: false
+        }
+    },
+
     project : {
         name : 'LD33',
         version : '0.0.1',

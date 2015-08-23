@@ -50,6 +50,7 @@ class PlayScreenState extends State {
     var bottomCollisionType :CbType = new CbType();
 
     var obstacles :Array<NapeBody>;
+    var quest_obstacles :Array<NapeBody>;
 
     var ballsLeft :Int = 10;
     var ballsText :Text;
@@ -64,7 +65,7 @@ class PlayScreenState extends State {
 
     override function init() {
         //Fetch the loaded tmx data from the assets
-        var map_data = Luxe.resources.text('assets/test.tmx').asset.text;
+        var map_data = Luxe.resources.text('assets/test2.tmx').asset.text;
 
         //parse that data into a usable TiledMap instance
         map = new TiledMap({ format:'tmx', tiled_file_data: map_data });
@@ -149,18 +150,18 @@ class PlayScreenState extends State {
                     var w :Float = object.width;
                     var h :Float = object.height;
                     if (object.gid == 1) {
-                        w *= 0.75;
-                        h *= 0.75;
+                        w *= 0.8;
+                        h *= 0.8;
                     } else if (object.gid == 2) {
-                        w /= 2;
-                        h /= 2;
+                        w *= 0.6;
+                        h *= 0.6;
                     }
 
                     var rot = luxe.utils.Maths.radians(object.rotation);
 
                     var image_source = ['box.png', 'circle.png']; // horrible hack
                     var obstacle = new Sprite({
-                        pos: new Vector(x + 32 + object.pos.x, y - 32 + object.pos.y),
+                        pos: new Vector(x + 16 + object.pos.x, y - 16 + object.pos.y),
                         size: new Vector(w, h),
                         rotation_z: rot,
                         texture: Luxe.resources.texture('assets/' + image_source[object.gid-1])
@@ -169,8 +170,8 @@ class PlayScreenState extends State {
                     var obstacle_col = new BoxCollider({
                         body_type: BodyType.STATIC,
                         material: Material.steel(),
-                        x: x + 32 + object.pos.x,
-                        y: y - 32 + object.pos.y,
+                        x: x + 16 + object.pos.x,
+                        y: y - 16 + object.pos.y,
                         w: w,
                         h: h,
                         rotation: rot
@@ -181,6 +182,24 @@ class PlayScreenState extends State {
                     obstacles.push(obstacle_col);
                 }
             }
+        }
+
+        var quest_count = 10;
+        quest_obstacles = obstacles.copy();
+        while (quest_obstacles.length > quest_count) {
+            var random_quest = quest_obstacles[Math.floor(quest_obstacles.length * Math.random())];
+            quest_obstacles.remove(random_quest);
+        }
+        for (quest in quest_obstacles) {
+            // TODO: Should be a component
+            var radius = 15;
+            new Visual({
+                pos: new Vector(radius * 0.6, radius * 0.6),
+                color: new Color(1, 0, 0, 0.8),
+                geometry: Luxe.draw.circle({ r: radius }),
+                parent: quest.entity,
+                depth: -1
+            });
         }
 
         var obstacleInteractionListener = new InteractionListener(CbEvent.BEGIN, InteractionType.COLLISION, ballCollisionType, obstacleCollisionType, hitObstacle);
@@ -194,6 +213,11 @@ class PlayScreenState extends State {
             size: new Vector(320, 320),
             texture: Luxe.resources.texture('assets/monster.png')
         });
+
+        new Sprite({
+            pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y / 2),
+            texture: Luxe.resources.texture('assets/sidebar_ui.png')
+        });
     }
 
     function hitObstacle(collision :InteractionCallback) :Void {
@@ -206,11 +230,13 @@ class PlayScreenState extends State {
             return ob.body == obstacleBody;
         });
         obstacles.remove(obstacle);
+        quest_obstacles.remove(obstacle);
 
         var position = new Vector((ballBody.position.x + obstacleBody.position.x) / 2, (ballBody.position.y + obstacleBody.position.y) / 2);
 
         Luxe.events.fire('hit', { entity: obstacle.entity, body: obstacle.body, position: position });
         if (obstacles.empty()) Luxe.events.fire('won');
+        if (quest_obstacles.empty()) Luxe.events.fire('won');
         
         var hitVisual = new Visual({
             pos: position,
@@ -260,6 +286,7 @@ class PlayScreenState extends State {
         var diff = Vector.Subtract(pos, ball_start_pos);
         var vel = diff.normalized.multiplyScalar(700);
         ball_col.body.velocity = Vec2.get(vel.x, vel.y);
+        ball_col.body.angularVel = 100 * Math.random();
 
         ballsLeft--;
         updateBallsText();
