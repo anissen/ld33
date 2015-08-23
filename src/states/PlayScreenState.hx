@@ -64,6 +64,10 @@ class PlayScreenState extends State {
     }
 
     override function init() {
+        setup_level();
+    }
+
+    function setup_level() {
         //Fetch the loaded tmx data from the assets
         var map_data = Luxe.resources.text('assets/test2.tmx').asset.text;
 
@@ -113,7 +117,7 @@ class PlayScreenState extends State {
         var x = Luxe.camera.size.x - w; //(Luxe.camera.size.x - w) / 2;
         var y = (Luxe.camera.size.y - h) / 2;
 
-        ball_start_pos = new Vector(Luxe.camera.size.x / 2, y + 20);
+        ball_start_pos = new Vector(x + w / 2, y + 20);
 
         mouseJoint = new PivotJoint(Luxe.physics.nape.space.world, null, Vec2.weak(), Vec2.weak());
         mouseJoint.space = Luxe.physics.nape.space;
@@ -284,9 +288,9 @@ class PlayScreenState extends State {
         ball_col.body.cbTypes.add(ballCollisionType);
 
         var diff = Vector.Subtract(pos, ball_start_pos);
-        var vel = diff.normalized.multiplyScalar(700);
+        var vel = diff.normalized.multiplyScalar(500);
         ball_col.body.velocity = Vec2.get(vel.x, vel.y);
-        ball_col.body.angularVel = 100 * Math.random();
+        ball_col.body.angularVel = 500 * Math.random();
 
         ballsLeft--;
         updateBallsText();
@@ -319,7 +323,8 @@ class PlayScreenState extends State {
             case Key.key_r:
                 Luxe.scene.empty();
                 Luxe.physics.nape.space.clear();
-                reset_world();
+                ballsLeft = 3;
+                setup_level();
             case Key.key_g: Luxe.physics.nape.draw = !Luxe.physics.nape.draw;
         }
     }
