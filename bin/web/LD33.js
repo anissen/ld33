@@ -42906,8 +42906,10 @@ states_PlayScreenState.prototype = $extend(luxe_State.prototype,{
 		this.combos++;
 		if(this.combos > this.maxCombos) this.maxCombos = this.combos;
 		if(this.combos == 10 || this.combos == 15 || this.combos == 20) {
-			entities_Notification.Toast({ text : "" + this.combos + "x Combo!\nExtra Ball!", scene : Luxe.scene, pos : new phoenix_Vector(this.comboText.get_pos().x + this.comboText.geom.text_width,this.comboText.get_pos().y), color : new phoenix_Color(0,0,1)});
-			this.say([["C-c-combo!"],["Nice one"],["Well done!"],["Awesome"],["Bam!"],["Yay, an extra ball!"],["Now you're working your magic!"]],2,0.5);
+			if(!Lambda.empty(this.quest_obstacles)) {
+				entities_Notification.Toast({ text : "" + this.combos + "x Combo!\nExtra Ball!", scene : Luxe.scene, pos : new phoenix_Vector(this.comboText.get_pos().x + this.comboText.geom.text_width,this.comboText.get_pos().y), color : new phoenix_Color(0,0,1)});
+				this.say([["C-c-combo!"],["Nice one"],["Well done!"],["Awesome"],["Bam!"],["Yay, an extra ball!"],["Now you're working your magic!"]],2,0.5);
+			}
 			this.ballsLeft++;
 			this.updateBallsText();
 		}
