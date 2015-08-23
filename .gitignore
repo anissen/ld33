@@ -1,5 +1,5 @@
 /bin
-/assets/sounds
+/audio
 
 *.sublime-project
 *.sublime-workspace

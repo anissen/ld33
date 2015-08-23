@@ -294,6 +294,18 @@ class PlayScreenState extends State {
             pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y / 2),
             texture: Luxe.resources.texture('assets/sidebar_ui.png')
         });
+
+        Luxe.timer.schedule(1, function() {
+            if (monster == null) return;
+            var rnd = Math.random();
+            if (rnd < 0.5) {
+                monster.texture = Luxe.resources.texture('assets/monster.png');
+            } else if (rnd < 0.9) {
+                monster.texture = Luxe.resources.texture('assets/monster_closed_mouth.png');
+            } else {
+                monster.texture = Luxe.resources.texture('assets/monster_closed_eyes.png');
+            }
+        }, true);
     }
 
     function hitObstacle(collision :InteractionCallback) :Void {

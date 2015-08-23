@@ -64,6 +64,18 @@ class GameOverScreenState extends State {
             });
 
         Actuate.tween(monster.pos, 2, { y: Luxe.camera.size.y * 0.7 }).onComplete(outro);
+
+        Luxe.timer.schedule(1, function() {
+            if (monster == null) return;
+            var rnd = Math.random();
+            if (rnd < 0.5) {
+                monster.texture = Luxe.resources.texture('assets/monster.png');
+            } else if (rnd < 0.9) {
+                monster.texture = Luxe.resources.texture('assets/monster_closed_mouth.png');
+            } else {
+                monster.texture = Luxe.resources.texture('assets/monster_closed_eyes.png');
+            }
+        }, true);
     }
 
     override function onleave<T>(_value :T) {
