@@ -67,6 +67,6 @@ class TitleScreenState extends State {
     }
 
     override function onmousedown(e :MouseEvent) {
-        Main.switch_to_state(PlayScreenState.StateId, { mapId: 1, ball_count: 10, par: 5 });
+        Main.switch_to_state(PlayScreenState.StateId, { mapId: 1, ball_count: 5, par: 5 });
     }
 }

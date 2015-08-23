@@ -79,28 +79,7 @@ class PlayScreenState extends State {
     }
 
     override function init() {
-        Luxe.events.listen('won', function(_) {
-            game_over = true;
-
-            Luxe.timer.schedule(4, function() {
-                Main.switch_to_state(PlayScreenState.StateId, { mapId: mapId + 1, ball_count: 10, par: 5 });
-            });
-        });
-
-        Luxe.events.listen('hit', function(_) {
-            var sounds = ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "Ab1", "Ab2", "Ab3", "Ab4", "Ab5", "Ab6", "Ab7", "B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "Bb0", "Bb1", "Bb2", "Bb3", "Bb4", "Bb5", "Bb6", "Bb7", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "Db1", "Db2", "Db3", "Db4", "Db5", "Db6", "Db7", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "Eb1", "Eb2", "Eb3", "Eb4", "Eb5", "Eb6", "Eb7", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "Gb1", "Gb2", "Gb3", "Gb4", "Gb5", "Gb6", "Gb7"];
-            var sound = sounds[Math.floor(sounds.length * Math.random())];
-            Luxe.audio.play(sound); // TODO: Change to .ogg
-            // Luxe.audio.pan(sound, Math.random());
-
-            Luxe.camera.shake(2);
-
-            if (trail_renderer != null) {
-                trail_renderer.startSize = luxe.utils.Maths.clamp(trail_renderer.startSize + 2, 1, 6);
-                trail_renderer.maxLength = luxe.utils.Maths.clamp(trail_renderer.maxLength + 30, 150, 300);
-                trail_renderer.trailColor.h = luxe.utils.Maths.clamp(trail_renderer.trailColor.h + 20, 200, 360);
-            }
-        });
+        
     }
 
     function setup_level() {
@@ -302,6 +281,8 @@ class PlayScreenState extends State {
     }
 
     function hitObstacle(collision :InteractionCallback) :Void {
+        if (ball_col == null || game_over) return;
+
         var ballBody :nape.phys.Body = collision.int1.castBody;
         var obstacleBody :nape.phys.Body = collision.int2.castBody;
 
@@ -314,8 +295,11 @@ class PlayScreenState extends State {
         var position = new Vector((ballBody.position.x + obstacleBody.position.x) / 2, (ballBody.position.y + obstacleBody.position.y) / 2);
 
         Luxe.events.fire('hit', { entity: obstacle.entity, body: obstacle.body, position: position });
-        if (obstacles.empty()) Luxe.events.fire('won');
-        if (quest_obstacles.empty()) Luxe.events.fire('won');
+        if (obstacles.empty()) {
+            won();
+        } else  if (quest_obstacles.empty()) {
+            won();
+        }
         
         var hitVisual = new Sprite({
             pos: position,
@@ -332,9 +316,33 @@ class PlayScreenState extends State {
         obstacleBody.space = null;
         obstacle.entity.destroy();
 
+        var sounds = ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "Ab1", "Ab2", "Ab3", "Ab4", "Ab5", "Ab6", "Ab7", "B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "Bb0", "Bb1", "Bb2", "Bb3", "Bb4", "Bb5", "Bb6", "Bb7", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "Db1", "Db2", "Db3", "Db4", "Db5", "Db6", "Db7", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "Eb1", "Eb2", "Eb3", "Eb4", "Eb5", "Eb6", "Eb7", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "Gb1", "Gb2", "Gb3", "Gb4", "Gb5", "Gb6", "Gb7"];
+        var sound = sounds[Math.floor(sounds.length * Math.random())];
+        Luxe.audio.play(sound); // TODO: Change to .ogg
+        // Luxe.audio.pan(sound, Math.random());
+
+        Luxe.camera.shake(2);
+
+        if (trail_renderer != null) {
+            trail_renderer.startSize = luxe.utils.Maths.clamp(trail_renderer.startSize + 2, 1, 6);
+            trail_renderer.maxLength = luxe.utils.Maths.clamp(trail_renderer.maxLength + 30, 150, 300);
+            trail_renderer.trailColor.h = luxe.utils.Maths.clamp(trail_renderer.trailColor.h + 20, 200, 360);
+        }
+
         combos++;
         if (combos > maxCombos) maxCombos = combos;
+        if (combos % 10 == 0) {
+            ballsLeft++;
+            updateBallsText();
+        }
         updateComboText();
+    }
+
+    function won() {
+        game_over = true;
+        Luxe.timer.schedule(2, function() {
+            Main.switch_to_state(PlayScreenState.StateId, { mapId: mapId + 1, ball_count: 5, par: 5 });
+        });
     }
 
     function hitBottom(collision :InteractionCallback) :Void {
@@ -344,7 +352,10 @@ class PlayScreenState extends State {
     }
 
     function createBall(pos :Vector) {
-        if (ballsLeft <= 0 || game_over) return;
+        if (game_over) return;
+        if (ballsLeft <= 0) {
+            setup_level();
+        }
 
         var ball_size = 16;
         var ball = new Sprite({
@@ -421,9 +432,12 @@ class PlayScreenState extends State {
     override function onmousedown( e:MouseEvent ) {
         var mousePoint = Vec2.get(e.pos.x, e.pos.y);
 
-        if (ball_col == null) {
-            createBall(Luxe.camera.screen_point_to_world(e.pos));
+        if (ball_col != null) {
+            ball_col.body.space = null;
+            ball_col.entity.destroy();
+            ball_col = null;
         }
+        createBall(Luxe.camera.screen_point_to_world(e.pos));
     }
 
     override function onkeyup(e :KeyEvent) {
