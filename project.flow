@@ -10,8 +10,8 @@
 
     luxe:{
         window: {
-            width: 1152,
-            height: 768,
+            width: 768,
+            height: 512,
             title: 'Monsters Ball',
             fullscreen: false
         }
