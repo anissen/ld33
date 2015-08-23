@@ -23,6 +23,7 @@ import luxe.physics.nape.DebugDraw;
 import nape.phys.Body;
 import nape.phys.BodyType;
 import nape.geom.Vec2;
+import nape.geom.Vec3;
 import nape.phys.Material;
 import nape.shape.Polygon;
 
@@ -85,10 +86,10 @@ class PlayScreenState extends State {
             Luxe.audio.play(sound); // TODO: Change to .ogg
             // Luxe.audio.pan(sound, Math.random());
 
-            Luxe.camera.shake(5);
+            Luxe.camera.shake(2);
 
             if (trail_renderer != null) {
-                trail_renderer.startSize = luxe.utils.Maths.clamp(trail_renderer.startSize + 5, 1, 10);
+                trail_renderer.startSize = luxe.utils.Maths.clamp(trail_renderer.startSize + 2, 1, 6);
                 trail_renderer.maxLength = luxe.utils.Maths.clamp(trail_renderer.maxLength + 30, 150, 300);
                 trail_renderer.trailColor.h = luxe.utils.Maths.clamp(trail_renderer.trailColor.h + 20, 200, 360);
             }
@@ -327,7 +328,7 @@ class PlayScreenState extends State {
         trail_renderer = new components.TrailRenderer();
         ball.add(trail_renderer);
 
-        Luxe.camera.shake(5);
+        Luxe.camera.shake(2);
     }
 
     override function onenter<T>(_value :T) {
@@ -359,6 +360,8 @@ class PlayScreenState extends State {
                 if (trail_renderer.maxLength > 150) trail_renderer.maxLength -= dt * 20;
                 if (trail_renderer.trailColor.h > 200) trail_renderer.trailColor.h -= dt * 20;
             }
+            // ball_col.body.velocity.x = luxe.utils.Maths.clamp(ball_col.body.velocity.x, -100, 100);
+            // ball_col.body.velocity.y = luxe.utils.Maths.clamp(ball_col.body.velocity.y, -100, 100);
         }
     }
 
