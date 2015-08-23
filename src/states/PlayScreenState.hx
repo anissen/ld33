@@ -184,13 +184,15 @@ class PlayScreenState extends State {
                     var rot = luxe.utils.Maths.radians(object.rotation);
 
                     var image_source = ['box.png', 'circle.png']; // horrible hack
+                    var tex = image_source[object.gid-1];
                     var obstacle = new Sprite({
+                        name: tex + Luxe.utils.uniqueid(),
                         pos: new Vector(x + 16 + object.pos.x, y - 16 + object.pos.y),
                         origin: new Vector(w / 2, h / 2),
                         size: new Vector(w, h),
                         scale: new Vector(0, 0),
                         rotation_z: rot,
-                        texture: Luxe.resources.texture('assets/' + image_source[object.gid-1])
+                        texture: Luxe.resources.texture('assets/' + tex)
                     });
                     Actuate.tween(obstacle.scale, 0.4, { x: 1, y: 1 }).delay(count / 80);
 
@@ -220,18 +222,30 @@ class PlayScreenState extends State {
             quest_obstacles.remove(random_quest);
         }
         for (quest in quest_obstacles) {
+            var visual :Visual;
             // TODO: Should be a component
-            var radius = 15;
-            var redCircle = new Visual({
-                pos: new Vector(radius * 0.65, radius * 0.65),
-                color: new Color(1, 0, 0, 0.8),
-                geometry: Luxe.draw.circle({ r: radius }),
-                scale: new Vector(0.9, 0.9),
-                parent: quest.entity,
-                depth: -1
-            });
+            if (quest.entity.name.substring(0, 3) == 'box') {
+                visual = new Sprite({
+                    pos: new Vector(25.6, 12.8),
+                    color: new Color(1, 0, 0, 0.8),
+                    size: new Vector(58, 29),
+                    scale: new Vector(0.95, 0.95),
+                    parent: quest.entity,
+                    depth: -1
+                });
+            } else {
+                var radius = 15;
+                visual = new Visual({
+                    pos: new Vector(radius * 0.65, radius * 0.65),
+                    color: new Color(1, 0, 0, 0.8),
+                    geometry: Luxe.draw.circle({ r: radius }),
+                    scale: new Vector(0.95, 0.95),
+                    parent: quest.entity,
+                    depth: -1
+                });
+            }
 
-            Actuate.tween(redCircle.scale, 2.0, { x: 1.1, y: 1.1 })
+            Actuate.tween(visual.scale, 1.5, { x: 1.05, y: 1.05 })
                 .reflect()
                 .repeat();
             
