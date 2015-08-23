@@ -13,9 +13,9 @@ Pause screen: Restart, quit to campaign map, quit to main screen
 Title screen
 Campaign map
 Monster speech, sounds, gestures
-Core polish: Sounds, explosions, particles, transitions between states
+Core polish: Transitions between states
 Game over screen: Stars, score
-Title screen: New game, continue game
+Title screen: Continue game
 Background
 Intro (tutorial)
 Won screen

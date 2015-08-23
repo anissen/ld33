@@ -71,6 +71,8 @@ class PlayScreenState extends State {
     var maxCombos :Int;
     var trail_renderer :components.TrailRenderer;
 
+    var game_over :Bool;
+
     public function new() {
         super({ name: StateId });
         scene = new Scene('PlayScreenScene');
@@ -78,7 +80,7 @@ class PlayScreenState extends State {
 
     override function init() {
         Luxe.events.listen('won', function(_) {
-            ballsText.text = 'YOU WON!';
+            game_over = true;
 
             Luxe.timer.schedule(4, function() {
                 Main.switch_to_state(PlayScreenState.StateId, { mapId: mapId + 1, ball_count: 10, par: 5 });
@@ -102,6 +104,7 @@ class PlayScreenState extends State {
     }
 
     function setup_level() {
+        game_over = false;
         Luxe.scene.empty();
         Luxe.physics.nape.space.clear();
         ballsLeft = ball_count;
@@ -204,6 +207,7 @@ class PlayScreenState extends State {
                     var image_source = ['box.png', 'circle.png']; // horrible hack
                     var obstacle = new Sprite({
                         pos: new Vector(x + 16 + object.pos.x, y - 16 + object.pos.y),
+                        origin: new Vector(w / 2, h / 2),
                         size: new Vector(w, h),
                         scale: new Vector(0, 0),
                         rotation_z: rot,
@@ -340,7 +344,7 @@ class PlayScreenState extends State {
     }
 
     function createBall(pos :Vector) {
-        if (ballsLeft <= 0) return;
+        if (ballsLeft <= 0 || game_over) return;
 
         var ball_size = 16;
         var ball = new Sprite({
@@ -425,6 +429,7 @@ class PlayScreenState extends State {
     override function onkeyup(e :KeyEvent) {
         switch (e.keycode) {
             case Key.key_r: setup_level();
+            case Key.escape: Main.switch_to_state(TitleScreenState.StateId);
         }
     }
 
