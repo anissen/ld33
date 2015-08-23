@@ -66,6 +66,9 @@ class PlayScreenState extends State {
 
     var ball_start_pos :Vector;
 
+    var comboText :Text;
+    var combos :Int;
+    var maxCombos :Int;
     var trail_renderer :components.TrailRenderer;
 
     public function new() {
@@ -99,6 +102,8 @@ class PlayScreenState extends State {
         Luxe.physics.nape.space.clear();
         ballsLeft = ball_count;
         ball_col = null;
+        combos = 0;
+        maxCombos = 0;
 
         //Fetch the loaded tmx data from the assets
         var map_data = Luxe.resources.text(map_asset).asset.text;
@@ -112,11 +117,21 @@ class PlayScreenState extends State {
         reset_world();
 
         ballsText = new Text({
-            pos: new Vector(0, 0),
-            bounds: new luxe.Rectangle(0, 0, 200, 200),
-            align: center
+            pos: new Vector(0, 10),
+            bounds: new luxe.Rectangle(0, 0, 256, 200),
+            align: center,
+            color: new Color(0.8, 0.4, 0.0)
         });
+
+        comboText = new Text({
+            pos: new Vector(0, 50),
+            bounds: new luxe.Rectangle(0, 0, 256, 200),
+            align: center,
+            color: new Color(0.0, 0.6, 0.8)
+        });
+
         updateBallsText();
+        updateComboText();
     }
 
     function updateBallsText() {
@@ -127,13 +142,17 @@ class PlayScreenState extends State {
         ballsText.text = '$ballsLeft balls left';
     }
 
+    function updateComboText() {
+        comboText.text = 'Combo: ${combos}x\nMax: ${maxCombos}x';
+    }
+
     function reset_world() {
         var w = map.total_width;
         var h = map.total_height;
         var x = Luxe.camera.size.x - w; //(Luxe.camera.size.x - w) / 2;
         var y = (Luxe.camera.size.y - h) / 2;
 
-        ball_start_pos = new Vector(x + w / 2, y + 20);
+        ball_start_pos = new Vector(x + w / 2, y + 100);
 
         mouseJoint = new PivotJoint(Luxe.physics.nape.space.world, null, Vec2.weak(), Vec2.weak());
         mouseJoint.space = Luxe.physics.nape.space;
@@ -146,6 +165,11 @@ class PlayScreenState extends State {
         border.shapes.add(new Polygon(Polygon.rect(x, y, -1, h)));
         border.shapes.add(new Polygon(Polygon.rect(x + w, y, 1, h)));
         border.space = Luxe.physics.nape.space;
+
+        // var bottomMover = new Body(BodyType.STATIC);
+        // bottom.shapes.add(new Polygon(Polygon.rect(x, y + h, w, 1)));
+        // bottom.space = Luxe.physics.nape.space;
+        // bottom.cbTypes.add(bottomCollisionType);
 
         var bottom = new Body(BodyType.STATIC);
         bottom.shapes.add(new Polygon(Polygon.rect(x, y + h, w, 1)));
@@ -259,11 +283,12 @@ class PlayScreenState extends State {
         if (obstacles.empty()) Luxe.events.fire('won');
         if (quest_obstacles.empty()) Luxe.events.fire('won');
         
-        var hitVisual = new Visual({
+        var hitVisual = new Sprite({
             pos: position,
-            color: new Color(1, 1, 1, 0.4),
-            geometry: Luxe.draw.circle({ r: 25 }),
+            texture: Luxe.resources.texture('assets/cloud.png'),
+            size: new Vector(25, 25),
             scale: new Vector(0.5, 0.5),
+            rotation_z: 360 * Math.random(),
             depth: 10
         });
         Actuate.tween(hitVisual.scale, 0.3, { x: 1, y: 1 }).onComplete(function() {
@@ -272,6 +297,10 @@ class PlayScreenState extends State {
 
         obstacleBody.space = null;
         obstacle.entity.destroy();
+
+        combos++;
+        if (combos > maxCombos) maxCombos = combos;
+        updateComboText();
     }
 
     function hitBottom(collision :InteractionCallback) :Void {
@@ -309,6 +338,9 @@ class PlayScreenState extends State {
 
         ballsLeft--;
         updateBallsText();
+
+        combos = 0;
+        updateComboText();
 
         trail_renderer = new components.TrailRenderer();
         ball.add(trail_renderer);
