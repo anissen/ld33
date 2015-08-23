@@ -37,7 +37,7 @@ class TitleScreenState extends State {
         });
 
         titleText = new Text({
-            pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y / 2),
+            pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y * 0.7),
             text: 'Click to start',
             color: new Color(1, 1, 1, 0),
             align: TextAlign.center,

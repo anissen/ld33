@@ -18,6 +18,9 @@ class Main extends luxe.Game {
         config.preload.textures.push({ id:'assets/monster.png' });
         config.preload.textures.push({ id:'assets/sidebar_ui.png' });
         config.preload.textures.push({ id:'assets/title.png' });
+        config.preload.textures.push({ id:'assets/particle.png' });
+
+        config.preload.texts.push({ id:'assets/fireflies.json' });
         config.preload.texts.push({ id:'assets/test.tmx' });
         config.preload.texts.push({ id:'assets/test2.tmx' });
         config.preload.texts.push({ id:'assets/level3.tmx' });
