@@ -32,11 +32,18 @@ import nape.constraint.PivotJoint;
 
 using Lambda;
 
+typedef PlayOptions = {
+    map :String,
+    ball_count :Int,
+    par :Int
+}
+
 class PlayScreenState extends State {
     static public var StateId :String = 'PlayScreenState';
     var scene :Scene;
 
     //The level tiles
+    var map_asset :String;
     var map: TiledMap;
     var map_scale: Int = 1;
 
@@ -52,11 +59,15 @@ class PlayScreenState extends State {
     var obstacles :Array<NapeBody>;
     var quest_obstacles :Array<NapeBody>;
 
-    var ballsLeft :Int = 10;
+    var ball_count :Int;
+    var par :Int;
+    var ballsLeft :Int;
     var ballsText :Text;
     var ball_col :CircleCollider;
 
     var ball_start_pos :Vector;
+
+    var trail_renderer :components.TrailRenderer;
 
     public function new() {
         super({ name: StateId });
@@ -64,26 +75,6 @@ class PlayScreenState extends State {
     }
 
     override function init() {
-        setup_level();
-    }
-
-    function setup_level() {
-        //Fetch the loaded tmx data from the assets
-        var map_data = Luxe.resources.text('assets/test2.tmx').asset.text;
-
-        //parse that data into a usable TiledMap instance
-        map = new TiledMap({ format:'tmx', tiled_file_data: map_data });
-
-        //Create the tilemap visuals
-        // map.display({ scale:map_scale, filter:FilterType.nearest });
-
-        ballsText = new Text({
-            pos: new Vector(0, 0),
-            bounds: new luxe.Rectangle(0, 0, 200, 200),
-            align: center
-        });
-        updateBallsText();
-
         Luxe.events.listen('won', function(_) {
             ballsText.text = 'YOU WON!';
         });
@@ -93,12 +84,47 @@ class PlayScreenState extends State {
             var sound = sounds[Math.floor(sounds.length * Math.random())];
             Luxe.audio.play(sound); // TODO: Change to .ogg
             // Luxe.audio.pan(sound, Math.random());
+
+            Luxe.camera.shake(5);
+
+            if (trail_renderer != null) {
+                trail_renderer.startSize = luxe.utils.Maths.clamp(trail_renderer.startSize + 5, 1, 10);
+                trail_renderer.maxLength = luxe.utils.Maths.clamp(trail_renderer.maxLength + 30, 150, 300);
+                trail_renderer.trailColor.h = luxe.utils.Maths.clamp(trail_renderer.trailColor.h + 20, 200, 360);
+            }
         });
+    }
+
+    function setup_level() {
+        Luxe.scene.empty();
+        Luxe.physics.nape.space.clear();
+        ballsLeft = ball_count;
+        ball_col = null;
+
+        //Fetch the loaded tmx data from the assets
+        var map_data = Luxe.resources.text(map_asset).asset.text;
+
+        //parse that data into a usable TiledMap instance
+        map = new TiledMap({ format:'tmx', tiled_file_data: map_data });
+
+        //Create the tilemap visuals
+        // map.display({ scale:map_scale, filter:FilterType.nearest });
 
         reset_world();
+
+        ballsText = new Text({
+            pos: new Vector(0, 0),
+            bounds: new luxe.Rectangle(0, 0, 200, 200),
+            align: center
+        });
+        updateBallsText();
     }
 
     function updateBallsText() {
+        if (ballsLeft == 1) {
+            ballsText.text = 'Last ball!';
+            return;
+        }
         ballsText.text = '$ballsLeft balls left';
     }
 
@@ -147,6 +173,7 @@ class PlayScreenState extends State {
 
         obstacles = [];
 
+        var count = 0;
         for (group in map.tiledmap_data.object_groups) {
             for (object in group.objects) {
                 if (group.name == 'boxes') {
@@ -167,9 +194,11 @@ class PlayScreenState extends State {
                     var obstacle = new Sprite({
                         pos: new Vector(x + 16 + object.pos.x, y - 16 + object.pos.y),
                         size: new Vector(w, h),
+                        scale: new Vector(0, 0),
                         rotation_z: rot,
                         texture: Luxe.resources.texture('assets/' + image_source[object.gid-1])
                     });
+                    Actuate.tween(obstacle.scale, 0.4, { x: 1, y: 1 }).delay(count / 80);
 
                     var obstacle_col = new BoxCollider({
                         body_type: BodyType.STATIC,
@@ -184,6 +213,8 @@ class PlayScreenState extends State {
                     obstacle_col.body.cbTypes.add(obstacleCollisionType);
 
                     obstacles.push(obstacle_col);
+
+                    count++;
                 }
             }
         }
@@ -225,8 +256,6 @@ class PlayScreenState extends State {
     }
 
     function hitObstacle(collision :InteractionCallback) :Void {
-        // collision.
-        // trace('ballToWall');
         var ballBody :nape.phys.Body = collision.int1.castBody;
         var obstacleBody :nape.phys.Body = collision.int2.castBody;
 
@@ -288,16 +317,25 @@ class PlayScreenState extends State {
         ball_col.body.cbTypes.add(ballCollisionType);
 
         var diff = Vector.Subtract(pos, ball_start_pos);
-        var vel = diff.normalized.multiplyScalar(500);
+        var vel = diff.normalized.multiplyScalar(300);
         ball_col.body.velocity = Vec2.get(vel.x, vel.y);
-        ball_col.body.angularVel = 500 * Math.random();
+        ball_col.body.angularVel = -200 + 400 * Math.random();
 
         ballsLeft--;
         updateBallsText();
+
+        trail_renderer = new components.TrailRenderer();
+        ball.add(trail_renderer);
+
+        Luxe.camera.shake(5);
     }
 
     override function onenter<T>(_value :T) {
-        trace('ENTER $StateId');
+        var options :PlayOptions = cast _value;
+        map_asset = options.map;
+        ball_count = options.ball_count;
+        par = options.par;
+        setup_level();
     }
 
     override function onleave<T>(_value :T) {
@@ -315,16 +353,18 @@ class PlayScreenState extends State {
                 p1: end,
                 immediate: true
             });
+        } else {
+            if (trail_renderer != null) {
+                if (trail_renderer.startSize > 1) trail_renderer.startSize -= dt * 2;
+                if (trail_renderer.maxLength > 150) trail_renderer.maxLength -= dt * 20;
+                if (trail_renderer.trailColor.h > 200) trail_renderer.trailColor.h -= dt * 20;
+            }
         }
     }
 
     override function onkeyup(e :KeyEvent) {
         switch (e.keycode) {
-            case Key.key_r:
-                Luxe.scene.empty();
-                Luxe.physics.nape.space.clear();
-                ballsLeft = 3;
-                setup_level();
+            case Key.key_r: setup_level();
             case Key.key_g: Luxe.physics.nape.draw = !Luxe.physics.nape.draw;
         }
     }

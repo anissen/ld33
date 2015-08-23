@@ -13,7 +13,7 @@ Pause screen: Restart, quit to campaign map, quit to main screen
 Title screen
 Campaign map
 Monster speech, sounds, gestures
-Core polish: Sounds, trail, explosions, particles, screen shake, camera zoom, slowdown, transitions between states
+Core polish: Sounds, explosions, particles, transitions between states
 Game over screen: Stars, score
 Title screen: New game, continue game
 Background
