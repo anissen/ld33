@@ -17,6 +17,7 @@ class Main extends luxe.Game {
         config.preload.textures.push({ id:'assets/box.png' });
         config.preload.textures.push({ id:'assets/monster.png' });
         config.preload.textures.push({ id:'assets/sidebar_ui.png' });
+        config.preload.textures.push({ id:'assets/title.png' });
         config.preload.texts.push({ id:'assets/test.tmx' });
         config.preload.texts.push({ id:'assets/test2.tmx' });
         config.preload.texts.push({ id:'assets/level3.tmx' });
@@ -44,10 +45,9 @@ class Main extends luxe.Game {
 
         states = new States({ name: 'state_machine' });
         states.add(new TitleScreenState());
-        states.add(new MenuScreenState());
         states.add(new PlayScreenState());
 
-        switch_to_state(PlayScreenState.StateId, { map: 'assets/test2.tmx', ball_count: 10, par: 5 });
+        switch_to_state(TitleScreenState.StateId);
     }
 
     static public function switch_to_state<T>(state :String, ?args :T) {

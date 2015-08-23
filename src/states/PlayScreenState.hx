@@ -48,8 +48,6 @@ class PlayScreenState extends State {
     var map: TiledMap;
     var map_scale: Int = 1;
 
-    var drawer : DebugDraw;
-
     //for attaching to the mouse when dragging
     var mouseJoint : PivotJoint;
 
@@ -130,15 +128,6 @@ class PlayScreenState extends State {
     }
 
     function reset_world() {
-        if (drawer != null) {
-            drawer.destroy();
-            drawer = null;
-        }
-
-        //create the drawer, and assign it to the nape debug drawer
-        drawer = new DebugDraw();
-        Luxe.physics.nape.debugdraw = drawer;
-
         var w = map.total_width;
         var h = map.total_height;
         var x = Luxe.camera.size.x - w; //(Luxe.camera.size.x - w) / 2;
@@ -157,13 +146,11 @@ class PlayScreenState extends State {
         border.shapes.add(new Polygon(Polygon.rect(x, y, -1, h)));
         border.shapes.add(new Polygon(Polygon.rect(x + w, y, 1, h)));
         border.space = Luxe.physics.nape.space;
-        drawer.add(border);
 
         var bottom = new Body(BodyType.STATIC);
         bottom.shapes.add(new Polygon(Polygon.rect(x, y + h, w, 1)));
         bottom.space = Luxe.physics.nape.space;
         bottom.cbTypes.add(bottomCollisionType);
-        drawer.add(bottom);
 
         new Sprite({
             centered: false,
@@ -283,13 +270,11 @@ class PlayScreenState extends State {
             hitVisual.destroy();
         });
 
-        drawer.remove(obstacleBody);
         obstacleBody.space = null;
         obstacle.entity.destroy();
     }
 
     function hitBottom(collision :InteractionCallback) :Void {
-        drawer.remove(ball_col.body);
         ball_col.body.space = null;
         ball_col.entity.destroy();
         ball_col = null;
@@ -340,7 +325,7 @@ class PlayScreenState extends State {
     }
 
     override function onleave<T>(_value :T) {
-        trace('LEAVE $StateId');
+
     }
 
     override function update(dt :Float) {
@@ -360,22 +345,12 @@ class PlayScreenState extends State {
                 if (trail_renderer.maxLength > 150) trail_renderer.maxLength -= dt * 20;
                 if (trail_renderer.trailColor.h > 200) trail_renderer.trailColor.h -= dt * 20;
             }
-            // ball_col.body.velocity.x = luxe.utils.Maths.clamp(ball_col.body.velocity.x, -100, 100);
-            // ball_col.body.velocity.y = luxe.utils.Maths.clamp(ball_col.body.velocity.y, -100, 100);
         }
     }
 
     override function onkeyup(e :KeyEvent) {
         switch (e.keycode) {
             case Key.key_r: setup_level();
-            case Key.key_g: Luxe.physics.nape.draw = !Luxe.physics.nape.draw;
-        }
-    }
-
-    override function onmouseup( e:MouseEvent ) {
-        mouseJoint.active = false;
-    }
-
     override function onmousedown( e:MouseEvent ) {
         var mousePoint = Vec2.get(e.pos.x, e.pos.y);
 
@@ -383,42 +358,6 @@ class PlayScreenState extends State {
             createBall(Luxe.camera.screen_point_to_world(e.pos));
         }
 
-        for (body in Luxe.physics.nape.space.bodiesUnderPoint(mousePoint)) {
-            if (!body.isDynamic()) {
-                continue;
-            }
-
-            mouseJoint.anchor1.setxy(e.pos.x, e.pos.y);
-
-            // Configure hand joint to drag this body.
-            //   We initialise the anchor point on this body so that
-            //   constraint is satisfied.
-            //
-            //   The second argument of worldPointToLocal means we get back
-            //   a 'weak' Vec2 which will be automatically sent back to object
-            //   pool when setting the mouseJoint's anchor2 property.
-            mouseJoint.body2 = body;
-            mouseJoint.anchor2.set( body.worldPointToLocal(mousePoint, true));
-
-            // Enable hand joint!
-            mouseJoint.active = true;
-            break;
-        }
-
-        mousePoint.dispose();
-    } //onmousedown
-
-    override function onmousemove( e:MouseEvent ) {
-        if (mouseJoint.active) {
-            mouseJoint.anchor1.setxy(e.pos.x, e.pos.y);
         }
     }
-
-    #if mobile
-        override function ontouchmove( e:TouchEvent ) {
-            if (mouseJoint.active) {
-                mouseJoint.anchor1.setxy(e.pos.x, e.pos.y);
-            }
-        } //ontouchmove
-    #end //mobile
 }
