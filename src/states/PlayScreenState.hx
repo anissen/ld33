@@ -361,13 +361,15 @@ class PlayScreenState extends State {
         combos++;
         if (combos > maxCombos) maxCombos = combos;
         if (combos == 10 || combos == 15 || combos == 20) {
-            entities.Notification.Toast({
-                text: '${combos}x Combo!\nExtra Ball!',
-                scene: Luxe.scene,
-                pos: new Vector(comboText.pos.x + comboText.geom.text_width, comboText.pos.y),
-                color: new Color(0, 0, 1)
-            });
-            say([['C-c-combo!'], ['Nice one'], ['Well done!'], ['Awesome'], ['Bam!'], ['Yay, an extra ball!'], ['Now you\'re working your magic!']], 2, 0.5);
+            if (!quest_obstacles.empty()) {
+                entities.Notification.Toast({
+                    text: '${combos}x Combo!\nExtra Ball!',
+                    scene: Luxe.scene,
+                    pos: new Vector(comboText.pos.x + comboText.geom.text_width, comboText.pos.y),
+                    color: new Color(0, 0, 1)
+                });
+                say([['C-c-combo!'], ['Nice one'], ['Well done!'], ['Awesome'], ['Bam!'], ['Yay, an extra ball!'], ['Now you\'re working your magic!']], 2, 0.5);
+            }
             ballsLeft++;
             updateBallsText();
         }
