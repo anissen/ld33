@@ -20,10 +20,11 @@ class Main extends luxe.Game {
         config.preload.textures.push({ id:'assets/title.png' });
         config.preload.textures.push({ id:'assets/particle.png' });
         config.preload.textures.push({ id:'assets/cloud.png' });
+        config.preload.textures.push({ id:'assets/bouncer.png' });
 
         config.preload.texts.push({ id:'assets/fireflies.json' });
-        config.preload.texts.push({ id:'assets/test.tmx' });
-        config.preload.texts.push({ id:'assets/test2.tmx' });
+        config.preload.texts.push({ id:'assets/level1.tmx' });
+        config.preload.texts.push({ id:'assets/level2.tmx' });
         config.preload.texts.push({ id:'assets/level3.tmx' });
         config.preload.texts.push({ id:'assets/level4.tmx' });
 
@@ -60,9 +61,10 @@ class Main extends luxe.Game {
 
     override function onkeyup(e :KeyEvent) {
         switch (e.keycode) {
-            case Key.key_1: switch_to_state(PlayScreenState.StateId, { map: 'assets/test2.tmx', ball_count: 10, par: 5 });
-            case Key.key_2: switch_to_state(PlayScreenState.StateId, { map: 'assets/level3.tmx', ball_count: 10, par: 5 });
-            case Key.key_3: switch_to_state(PlayScreenState.StateId, { map: 'assets/level4.tmx', ball_count: 10, par: 5 });
+            case Key.key_1: switch_to_state(PlayScreenState.StateId, { mapId: 1, ball_count: 10, par: 5 });
+            case Key.key_2: switch_to_state(PlayScreenState.StateId, { mapId: 2, ball_count: 10, par: 5 });
+            case Key.key_3: switch_to_state(PlayScreenState.StateId, { mapId: 3, ball_count: 10, par: 5 });
+            case Key.key_4: switch_to_state(PlayScreenState.StateId, { mapId: 4, ball_count: 10, par: 5 });
         }
     }
 }

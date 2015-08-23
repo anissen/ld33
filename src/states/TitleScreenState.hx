@@ -39,12 +39,17 @@ class TitleScreenState extends State {
         titleText = new Text({
             pos: new Vector(Luxe.camera.size.x / 2, Luxe.camera.size.y * 0.7),
             text: 'Click to start',
-            color: new Color(1, 1, 1, 0),
+            color: new Color(0, 0, 1, 0),
             align: TextAlign.center,
             align_vertical: TextAlign.center,
             scene: scene,
             parent: background
         });
+
+        Actuate
+            .tween(titleText.pos, 0.8, { y: Luxe.camera.size.y * 0.8 })
+            .reflect()
+            .repeat();
 
         Actuate
             .tween(background.pos, 0.3, { y: Luxe.camera.size.y / 2 })
@@ -62,6 +67,6 @@ class TitleScreenState extends State {
     }
 
     override function onmousedown(e :MouseEvent) {
-        Main.switch_to_state(PlayScreenState.StateId, { map: 'assets/test2.tmx', ball_count: 10, par: 5 });
+        Main.switch_to_state(PlayScreenState.StateId, { mapId: 1, ball_count: 10, par: 5 });
     }
 }

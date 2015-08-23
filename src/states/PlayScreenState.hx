@@ -34,7 +34,7 @@ import nape.constraint.PivotJoint;
 using Lambda;
 
 typedef PlayOptions = {
-    map :String,
+    mapId :Int,
     ball_count :Int,
     par :Int
 }
@@ -44,7 +44,7 @@ class PlayScreenState extends State {
     var scene :Scene;
 
     //The level tiles
-    var map_asset :String;
+    var mapId :Int;
     var map: TiledMap;
     var map_scale: Int = 1;
 
@@ -79,6 +79,10 @@ class PlayScreenState extends State {
     override function init() {
         Luxe.events.listen('won', function(_) {
             ballsText.text = 'YOU WON!';
+
+            Luxe.timer.schedule(4, function() {
+                Main.switch_to_state(PlayScreenState.StateId, { mapId: mapId + 1, ball_count: 10, par: 5 });
+            });
         });
 
         Luxe.events.listen('hit', function(_) {
@@ -106,7 +110,7 @@ class PlayScreenState extends State {
         maxCombos = 0;
 
         //Fetch the loaded tmx data from the assets
-        var map_data = Luxe.resources.text(map_asset).asset.text;
+        var map_data = Luxe.resources.text('assets/level${mapId}.tmx').asset.text;
 
         //parse that data into a usable TiledMap instance
         map = new TiledMap({ format:'tmx', tiled_file_data: map_data });
@@ -117,14 +121,14 @@ class PlayScreenState extends State {
         reset_world();
 
         ballsText = new Text({
-            pos: new Vector(0, 10),
+            pos: new Vector(0, 40),
             bounds: new luxe.Rectangle(0, 0, 256, 200),
             align: center,
             color: new Color(0.8, 0.4, 0.0)
         });
 
         comboText = new Text({
-            pos: new Vector(0, 50),
+            pos: new Vector(0, 100),
             bounds: new luxe.Rectangle(0, 0, 256, 200),
             align: center,
             color: new Color(0.0, 0.6, 0.8)
@@ -152,7 +156,7 @@ class PlayScreenState extends State {
         var x = Luxe.camera.size.x - w; //(Luxe.camera.size.x - w) / 2;
         var y = (Luxe.camera.size.y - h) / 2;
 
-        ball_start_pos = new Vector(x + w / 2, y + 100);
+        ball_start_pos = new Vector(x + w / 2, y + 50);
 
         mouseJoint = new PivotJoint(Luxe.physics.nape.space.world, null, Vec2.weak(), Vec2.weak());
         mouseJoint.space = Luxe.physics.nape.space;
@@ -165,11 +169,6 @@ class PlayScreenState extends State {
         border.shapes.add(new Polygon(Polygon.rect(x, y, -1, h)));
         border.shapes.add(new Polygon(Polygon.rect(x + w, y, 1, h)));
         border.space = Luxe.physics.nape.space;
-
-        // var bottomMover = new Body(BodyType.STATIC);
-        // bottom.shapes.add(new Polygon(Polygon.rect(x, y + h, w, 1)));
-        // bottom.space = Luxe.physics.nape.space;
-        // bottom.cbTypes.add(bottomCollisionType);
 
         var bottom = new Body(BodyType.STATIC);
         bottom.shapes.add(new Polygon(Polygon.rect(x, y + h, w, 1)));
@@ -240,14 +239,45 @@ class PlayScreenState extends State {
         for (quest in quest_obstacles) {
             // TODO: Should be a component
             var radius = 15;
-            new Visual({
-                pos: new Vector(radius * 0.6, radius * 0.6),
+            var redCircle = new Visual({
+                pos: new Vector(radius * 0.65, radius * 0.65),
                 color: new Color(1, 0, 0, 0.8),
                 geometry: Luxe.draw.circle({ r: radius }),
+                scale: new Vector(0.9, 0.9),
                 parent: quest.entity,
                 depth: -1
             });
+
+            Actuate.tween(redCircle.scale, 2.0, { x: 1.1, y: 1.1 })
+                .reflect()
+                .repeat();
+            
+            // var questSprite :Sprite = cast quest.entity;
+            // questSprite.color.r = 1;
+            // questSprite.rotation_z -= 5;
+            // Actuate.tween(questSprite, 0.5, { rotation_z: questSprite.rotation_z + 10 })
+            //     .reflect()
+            //     .repeat();
         }
+
+        var bouncer = new Sprite({
+            pos: new Vector(x + w / 2, y + h - 25),
+            texture: Luxe.resources.texture('assets/bouncer.png')
+        });
+
+        var bouncer_col = new BoxCollider({
+            body_type: BodyType.STATIC,
+            material: Material.steel(),
+            x: bouncer.pos.x,
+            y: bouncer.pos.y,
+            w: bouncer.size.x,
+            h: bouncer.size.y
+        });
+        bouncer.add(bouncer_col);
+
+        // Actuate.tween(bouncer.pos, 3, { x: x + 16 + w })
+        //         .reflect()
+        //         .repeat();
 
         var obstacleInteractionListener = new InteractionListener(CbEvent.BEGIN, InteractionType.COLLISION, ballCollisionType, obstacleCollisionType, hitObstacle);
         Luxe.physics.nape.space.listeners.add(obstacleInteractionListener);
@@ -332,7 +362,7 @@ class PlayScreenState extends State {
         ball_col.body.cbTypes.add(ballCollisionType);
 
         var diff = Vector.Subtract(pos, ball_start_pos);
-        var vel = diff.normalized.multiplyScalar(300);
+        var vel = diff.normalized.multiplyScalar(500);
         ball_col.body.velocity = Vec2.get(vel.x, vel.y);
         ball_col.body.angularVel = -200 + 400 * Math.random();
 
@@ -354,7 +384,7 @@ class PlayScreenState extends State {
 
     override function onenter<T>(_value :T) {
         var options :PlayOptions = cast _value;
-        map_asset = options.map;
+        mapId = options.mapId;
         ball_count = options.ball_count;
         par = options.par;
         setup_level();
